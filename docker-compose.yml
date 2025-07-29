@@ -137,7 +137,7 @@ services:
       POSTGRESQL_DATABASE: guacamole_db
       POSTGRESQL_HOSTNAME: postgres
       POSTGRESQL_PASSWORD: 'ChooseYourOwnPasswordHere1234'
-      POSTGRESQL_USER: guacamole_user
+      POSTGRESQL_USERNAME: guacamole_user
       RECORDING_SEARCH_PATH: /record
     image: guacamole/guacamole:1.6.0
     networks:
