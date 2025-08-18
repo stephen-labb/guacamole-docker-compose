@@ -46,9 +46,9 @@ services:
   # guacd
   guacd:
     container_name: guacd_compose
-    image: guacamole/guacd
+    image: guacamole/guacd:x.x.x
     networks:
-      guacnetwork_compose:
+      - guacnetwork_compose
     restart: always
     volumes:
     - ./drive:/drive:rw
@@ -61,20 +61,20 @@ The following part of docker-compose.yml will create an instance of PostgreSQL u
 
 ~~~python
 ...
-  postgres:
+postgres:
     container_name: postgres_guacamole_compose
     environment:
       PGDATA: /var/lib/postgresql/data/guacamole
       POSTGRES_DB: guacamole_db
-      POSTGRES_PASSWORD: ChooseYourOwnPasswordHere1234
+      POSTGRES_PASSWORD: 'ChooseYourOwnPasswordHere1234'
       POSTGRES_USER: guacamole_user
-    image: postgres
+    image: postgres:xx.x-alpine
     networks:
-      guacnetwork_compose:
+      - guacnetwork_compose
     restart: always
     volumes:
-    - ./init:/docker-entrypoint-initdb.d:ro
-    - ./data:/var/lib/postgresql/data:rw
+    - ./init:/docker-entrypoint-initdb.d:z
+    - ./data:/var/lib/postgresql/data:Z
 ...
 ~~~
 
@@ -83,22 +83,25 @@ The following part of docker-compose.yml will create an instance of guacamole by
 
 ~~~python
 ...
-  guacamole:
+guacamole:
     container_name: guacamole_compose
+    group_add:
+      - "1000"
     depends_on:
     - guacd
     - postgres
     environment:
       GUACD_HOSTNAME: guacd
-      POSTGRES_DATABASE: guacamole_db
-      POSTGRES_HOSTNAME: postgres
-      POSTGRES_PASSWORD: ChooseYourOwnPasswordHere1234
-      POSTGRES_USER: guacamole_user
-    image: guacamole/guacamole
-    links:
-    - guacd
+      POSTGRESQL_DATABASE: guacamole_db
+      POSTGRESQL_HOSTNAME: postgres
+      POSTGRESQL_PASSWORD: 'ChooseYourOwnPasswordHere1234'
+      POSTGRESQL_USERNAME: guacamole_user
+      RECORDING_SEARCH_PATH: /record
+    image: guacamole/guacamole:x.x.x
     networks:
-      guacnetwork_compose:
+      - guacnetwork_compose
+    volumes:
+      - ./record:/record:rw
     ports:
     - 8080/tcp
     restart: always
@@ -110,21 +113,19 @@ The following part of docker-compose.yml will create an instance of nginx that m
 
 ~~~python
 ...
-  # nginx
+# nginx
   nginx:
    container_name: nginx_guacamole_compose
    restart: always
-   image: nginx
+   image: nginx:latest
    volumes:
    - ./nginx/templates:/etc/nginx/templates:ro
    - ./nginx/ssl/self.cert:/etc/nginx/ssl/self.cert:ro
    - ./nginx/ssl/self-ssl.key:/etc/nginx/ssl/self-ssl.key:ro
    ports:
    - 8443:443
-   links:
-   - guacamole
    networks:
-     guacnetwork_compose:
+     - guacnetwork_compose
 ...
 ~~~
 
@@ -132,7 +133,7 @@ The following part of docker-compose.yml will create an instance of nginx that m
 `prepare.sh` is a small script that creates `./init/initdb.sql` by downloading the docker image `guacamole/guacamole` and start it like this:
 
 ~~~bash
-docker run --rm guacamole/guacamole /opt/guacamole/bin/initdb.sh --postgresql > ./init/initdb.sql
+docker run --rm 'guacamole/guacamole:x.x.x' /opt/guacamole/bin/initdb.sh --postgresql > ./init/initdb.sql
 ~~~
 
 It creates the necessary database initialization file for postgres.
